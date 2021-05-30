@@ -15,6 +15,7 @@
 digit         [0-9]
 letter        [a-zA-Z_]
 hex 0[xX][0-9a-fA-F]+
+comment #.*\n
 
 %%
 "+"						{ return PLUS;			}
@@ -61,7 +62,11 @@ hex 0[xX][0-9a-fA-F]+
 "str"					{ return STR;				}
 (r[0-7])			{ yylval.ival = atoi(yytext + 1);
 							 	return REG; 	  	}
-"PC"					{ yylval.ival = 7;
+(pc|PC)				{ yylval.ival = 7;
+								return REG;				}
+(sp|SP)				{ yylval.ival = 6;
+								return REG;				}
+(PSW|psw)			{ yylval.ival = 8;
 								return REG;				}
 {letter}({letter}|{digit})* {
 								yylval.sval = strdup(yytext);
@@ -70,6 +75,7 @@ hex 0[xX][0-9a-fA-F]+
                 return NUMBER;    }
 {hex}         { yylval.ival = stoi(yytext, nullptr, 16);
 								return NUMBER;		}
+{comment}
 [ \t\n\r]     /* skip whitespace */
 .             { printf("Unknown character [%c]\n", yytext[0]);}
 %%

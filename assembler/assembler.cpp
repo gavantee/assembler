@@ -1,7 +1,9 @@
 #include <cstdio>
+#include <vector>
 
 extern FILE *yyin;
 extern int yyparse();
+extern std::vector<char> *code;
 
 int main(int, char**) {
   // Open a file handle to a particular file:
@@ -16,4 +18,7 @@ int main(int, char**) {
   // Parse through the input:
   yyparse();
 
+  for (char ch : *code) {
+    printf("%c", ch);
+  }
 }
