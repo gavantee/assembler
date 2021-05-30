@@ -3,6 +3,7 @@
   #include <iostream>
   #include <string>
   #include <vector>
+  #include <cstring>
 
   #include "parser.h"
 
@@ -48,6 +49,8 @@
 %type <ival> instr_0 instr_jmp instr_1 instr_2 instr_mem
 %type <ival> operand operand_jmp lit
 %type <str_list> sym_list
+%type <str_list> sym_lit_list
+%type <sval> sym_lit
 %start program
 
 %%
@@ -139,7 +142,7 @@ instr_mem:
 operand_jmp:
 	lit	{ $$ = $1; }
 	| SYMBOL { $$ = 0; }
-	| PERCENT SYMBOL { $$ = pc; }
+	| PERCENT SYMBOL { $$ = (5 << 16); }
 	| TIMES lit { $$ = (4 << 16) + $2; }
 	| TIMES SYMBOL { $$ = 4 << 16; }
 	| TIMES REG { $$ = ($2 << 24) + (1 << 16); }
@@ -152,7 +155,7 @@ operand:
 	| DOLLAR SYMBOL { $$ = 0; }
 	| lit { $$ = (4 << 16) + $1; }
 	| SYMBOL { $$ = 4 << 16; }
-	| PERCENT SYMBOL { $$ = pc; }
+	| PERCENT SYMBOL { $$ = (5 << 16) + (7 << 24); }
 	| REG { $$ = ($1 << 24) + (1 << 16); }
 	| LPAREN REG RPAREN { $$ = ($2 << 24) + (2 << 16); }
 	| LPAREN REG lit RPAREN { $$ = ($2 << 24) + (3 << 16) + $3; }
@@ -161,19 +164,23 @@ operand:
 sym_list:
 	SYMBOL { $$ = new vector<string>();
 		 $$->push_back($1); }
-	| sym_list COMMA SYMBOL;
+	| sym_list COMMA SYMBOL { $$->push_back($3); };
 
 lit: NUMBER { $$ = $1; }
    	| PLUS NUMBER { $$ = $2; }
-	| MINUS NUMBER { $$ = (1 << 16) - $2; }
+	| MINUS NUMBER { $$ = (1 << 16) - $2; };
 
 sym_lit:
-	SYMBOL
-	| lit;
+	SYMBOL { $$ = strdup($1); }
+	| lit  { $$ = (char *) calloc(7, sizeof(char));
+		 snprintf($$, 6, "%d", $1);
+		 $$[6] = '\0';
+		 puts($$); };
 
 sym_lit_list:
-	sym_lit
-	| sym_lit_list COMMA sym_lit;
+	sym_lit { $$ = new vector<string>();
+		  $$->push_back($1); }
+	| sym_lit_list COMMA sym_lit {$$->push_back($3); };
 
 %%
 
