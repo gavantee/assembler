@@ -1,9 +1,12 @@
 #include <cstdio>
 #include <vector>
 
+#include "symtable.h"
+
 extern FILE *yyin;
 extern int yyparse();
 extern std::vector<char> *code;
+SymTable sym_table;
 
 int main(int, char**) {
   // Open a file handle to a particular file:
@@ -18,7 +21,10 @@ int main(int, char**) {
   // Parse through the input:
   yyparse();
 
+	sym_table.dump();
+	FILE *outfile = fopen("test.o", "w");
   for (char ch : *code) {
-    printf("%c", ch);
+    fprintf(outfile, "%c", ch);
   }
+
 }
