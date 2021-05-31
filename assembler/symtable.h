@@ -26,15 +26,31 @@ typedef struct Symbol {
 	}
 } Symbol;
 
+typedef struct Reloc {
+  int off;
+	string label;
+	bool rel;
+	string section;
+	Reloc(int o, string l, string s, bool r) {
+    label = l;
+		section = s;
+		off = o;
+		rel = r;
+	}
+} Reloc;
+
 class SymTable {
 private:
   map<string, Symbol> symbols;
+	map<string, vector<Reloc>> relocs;
 public:
 	void addSymbol(string label, string section, vector<int> *loc, bool global);
 	void addSymbol(string label, string section, int val, bool global = false);
-	int resolveSymbol(string label, string section, int loc);
+	int resolveSymbol(string label, string section, int loc, bool rel = false);
   void dump();
   void printSymbol(const Symbol &s);
+	void addReloc(string section, string label, int off, bool rel);
+	void reduce();
 };
 
 #endif

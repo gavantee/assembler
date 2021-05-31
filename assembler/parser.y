@@ -149,7 +149,7 @@ instr_mem:
 operand_jmp:
 	lit	{ $$ = $1; }
 	| SYMBOL { $$ = sym_table.resolveSymbol($1, section, pc + 3); }
-	| PERCENT SYMBOL { $$ = (5 << 16) + pc + 5 - sym_table.resolveSymbol($2, section, pc + 3); }
+	| PERCENT SYMBOL { $$ = (5 << 16) + pc + 5 - sym_table.resolveSymbol($2, section, pc + 3, true); }
 	| TIMES lit { $$ = (4 << 16) + $2; }
 	| TIMES SYMBOL { $$ = (4 << 16) + sym_table.resolveSymbol($2, section, pc + 3); }
 	| TIMES REG { $$ = ($2 << 24) + (1 << 16); }
@@ -162,7 +162,7 @@ operand:
 	| DOLLAR SYMBOL { $$ = sym_table.resolveSymbol($2, section, pc + 3); }
 	| lit { $$ = (4 << 16) + $1; }
 	| SYMBOL { $$ = (4 << 16) + sym_table.resolveSymbol($1, section, pc + 3); }
-	| PERCENT SYMBOL { $$ = (5 << 16) + (7 << 24) + pc + 5 - sym_table.resolveSymbol($2, section, pc + 3); }
+	| PERCENT SYMBOL { $$ = (5 << 16) + (7 << 24) + pc + 5 - sym_table.resolveSymbol($2, section, pc + 3, true); }
 	| REG { $$ = ($1 << 24) + (1 << 16); }
 	| LPAREN REG RPAREN { $$ = ($2 << 24) + (2 << 16); }
 	| LPAREN REG lit RPAREN { $$ = ($2 << 24) + (3 << 16) + $3; }

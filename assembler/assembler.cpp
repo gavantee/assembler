@@ -21,6 +21,7 @@ int main(int, char**) {
   // Parse through the input:
   yyparse();
 
+	sym_table.reduce();
 	sym_table.dump();
 	FILE *outfile = fopen("test.o", "w");
   for (char ch : *code) {
