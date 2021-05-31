@@ -22,8 +22,8 @@ comment #.*\n
 "-"						{ return MINUS;		  }
 ":"						{ return COLON;   	}
 ","						{ return COMMA;   	}
-"("						{ return LPAREN;  	}
-")"						{ return RPAREN;  	}
+"["						{ return LPAREN;  	}
+"]"						{ return RPAREN;  	}
 "*"           { return TIMES;	  	}
 "$"           { return DOLLAR;  	}
 "%"           { return PERCENT; 	}
