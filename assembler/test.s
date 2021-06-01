@@ -22,7 +22,7 @@ isr_timer:
  iret
 # prekidna rutina za terminal
 isr_terminal:
- push r0
+ push r1
  push r1
  ldr r0, term_in
  str r0, term_out

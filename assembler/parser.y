@@ -6,7 +6,7 @@
   #include <cstring>
 
   #include "parser.h"
-  #include "symtable.h"
+  #include "code.h"
 
   using namespace std;
 
@@ -15,10 +15,8 @@
   extern FILE *yyin;
 
   int pc = 0;
-  std::vector<char> *code = new std::vector<char>();
-  extern SymTable sym_table;
+  extern Code code;
   string section = "NO_SEC";
-  void push_back(std::vector<char> *v, int bytes, int size);
 
   void yyerror(const char *s);
 %}
@@ -57,8 +55,7 @@ line:
 	| label inst_dir;
 
 label:
-     SYMBOL COLON { cout << "labela: " << $1 << endl;
-     		    sym_table.addSymbol($1, section, pc); };
+     SYMBOL COLON { code.addSymbol($1, section, pc); };
 
 inst_dir:
 	instruction
@@ -67,48 +64,51 @@ inst_dir:
 directive:
 	GLOBAL sym_list {
 			  for (string s : *($2))
-			  	sym_table.addSymbol(s, section, new vector<int>(), true); }
+			  	code.addSymbol(s, section, new vector<Location>(), true); }
 	| EXTERN sym_list {
 			    for (string s : *($2)) {
-			      sym_table.addSymbol(s, "EXT", new vector<int>(), true); }}
-	| SECTION SYMBOL { section = $2;
-	                   sym_table.addSymbol($2, section, pc, true);
-		           cout << "sekcija: " << $2 << endl; }
+			      code.addSymbol(s, "EXT", new vector<Location>(), true); }}
+	| SECTION SYMBOL { pc = 0;
+	                   section = $2;
+	                   code.addSymbol($2, section, pc, true);}
 	| WORD sym_lit_list {
 		for (string s : *($2)) {
 		  int tmp;
 		  if (s[0] >= '0' && s[0] <= '9') tmp = stoi(s, nullptr, 0);
-		  else tmp = sym_table.resolveSymbol(s, section, pc);
+		  else tmp = code.resolveSymbol(s, section, pc);
 		  pc += 2;
-		  push_back(code, tmp, 2);
+		  code.addInt(tmp, 2);
 		}
 	}
-	| SKIP lit { pc += $2; push_back(code, 0, $2); }
+	| SKIP lit { pc += $2; code.addInt(0, $2); }
 	| EQU SYMBOL COMMA lit {
-	sym_table.addSymbol($2, "ABS", $4); }
+	code.addSymbol($2, "ABS", $4); }
 	| END;
 
 instruction:
-	instr_0 { code->push_back($1);
-		printf("0x%02X: 0x%02X\n", pc, $1);
+	instr_0 { code.addByte($1);
 		pc += 1; }
-	| instr_jmp operand_jmp { code->push_back($1);
-		push_back(code, $2, 4);
-		printf("0x%02X: 0x%02X 0x%08X\n", pc, $1, $2);
+	| instr_jmp operand_jmp { code.addByte($1);
+		code.addInt($2, 4);
 		pc += 5; }
-	| instr_1 REG { code->push_back($1);
-		code->push_back($2);
-		printf("0x%02X: 0x%02X 0x%02X\n", pc, $1, $2);
+	| instr_1 REG { code.addByte($1);
+		code.addByte($2);
 		pc += 2; }
-	| instr_2 REG COMMA REG { code->push_back($1);
-		code->push_back(($2 << 4) + $4);
-		printf("0x%02X: 0x%02X 0x%02X\n", pc, $1, ($2 << 4) + $4);
+	| instr_2 REG COMMA REG { code.addByte($1);
+		code.addByte(($2 << 4) + $4);
 		pc += 2; }
-	| instr_mem REG COMMA operand { code->push_back($1);
+	| instr_mem REG COMMA operand { code.addByte($1);
 		int tmp = ($2 << 28) + $4;
-		push_back(code, tmp, 4);
-		printf("0x%02X: 0x%02X 0x%08X\n", pc, $1, tmp);
-		pc += 5; };
+		code.addInt(tmp, 4);
+		pc += 5; }
+	| PUSH REG { code.addByte(0xB0);
+		     code.addByte(($2 << 4) + 6);
+		     code.addByte((1 << 4) + 2);
+		     pc += 3; }
+	| POP REG  { code.addByte(0xA0);
+		     code.addByte(($2 << 4) + 6);
+		     code.addByte((4 << 4) + 2);
+		     pc += 3; };
 
 instr_0:
 	HALT  	{ $$ = 0x00; }
@@ -122,10 +122,7 @@ instr_jmp:
 	| JNE 	{ $$ = 0x52; }
 	| JGT 	{ $$ = 0x53; };
 
-instr_1:
-	PUSH 	{ $$ = 0xC0; }
-	| POP	{ $$ = 0xC1; }
-	| INT 	{ $$ = 0x10; };
+instr_1: INT 	{ $$ = 0x10; };
 
 instr_2:
        XCHG  	{ $$ = 0x60; }
@@ -148,25 +145,25 @@ instr_mem:
 
 operand_jmp:
 	lit	{ $$ = $1; }
-	| SYMBOL { $$ = sym_table.resolveSymbol($1, section, pc + 3); }
-	| PERCENT SYMBOL { $$ = (5 << 16) + pc + 5 - sym_table.resolveSymbol($2, section, pc + 3, true); }
+	| SYMBOL { $$ = code.resolveSymbol($1, section, pc + 3); }
+	| PERCENT SYMBOL { $$ = (5 << 16) + pc + 5 - code.resolveSymbol($2, section, pc + 3, true); }
 	| TIMES lit { $$ = (4 << 16) + $2; }
-	| TIMES SYMBOL { $$ = (4 << 16) + sym_table.resolveSymbol($2, section, pc + 3); }
+	| TIMES SYMBOL { $$ = (4 << 16) + code.resolveSymbol($2, section, pc + 3); }
 	| TIMES REG { $$ = ($2 << 24) + (1 << 16); }
 	| TIMES LPAREN REG RPAREN { $$ = ($3 << 24) + (2 << 16); }
 	| TIMES LPAREN REG lit RPAREN { $$ = ($3 << 24) + (3 << 16) + $4; }
-	| TIMES LPAREN REG PLUS SYMBOL RPAREN { $$ = ($3 << 24) + (3 << 16) + sym_table.resolveSymbol($5, section, pc + 3); };
+	| TIMES LPAREN REG PLUS SYMBOL RPAREN { $$ = ($3 << 24) + (3 << 16) + code.resolveSymbol($5, section, pc + 3); };
 
 operand:
        	DOLLAR lit { $$ = $2; }
-	| DOLLAR SYMBOL { $$ = sym_table.resolveSymbol($2, section, pc + 3); }
+	| DOLLAR SYMBOL { $$ = code.resolveSymbol($2, section, pc + 3); }
 	| lit { $$ = (4 << 16) + $1; }
-	| SYMBOL { $$ = (4 << 16) + sym_table.resolveSymbol($1, section, pc + 3); }
-	| PERCENT SYMBOL { $$ = (5 << 16) + (7 << 24) + pc + 5 - sym_table.resolveSymbol($2, section, pc + 3, true); }
+	| SYMBOL { $$ = (4 << 16) + code.resolveSymbol($1, section, pc + 3); }
+	| PERCENT SYMBOL { $$ = (5 << 16) + (7 << 24) + pc + 5 - code.resolveSymbol($2, section, pc + 3, true); }
 	| REG { $$ = ($1 << 24) + (1 << 16); }
 	| LPAREN REG RPAREN { $$ = ($2 << 24) + (2 << 16); }
 	| LPAREN REG lit RPAREN { $$ = ($2 << 24) + (3 << 16) + $3; }
-	| LPAREN REG PLUS SYMBOL RPAREN { $$ = ($2 << 24) + (3 << 16) + sym_table.resolveSymbol($4, section, pc + 3); }
+	| LPAREN REG PLUS SYMBOL RPAREN { $$ = ($2 << 24) + (3 << 16) + code.resolveSymbol($4, section, pc + 3); }
 
 sym_list:
 	SYMBOL { $$ = new vector<string>();
@@ -189,13 +186,7 @@ sym_lit_list:
 	| sym_lit_list COMMA sym_lit {$$->push_back($3); };
 
 %%
-
-void push_back(std::vector<char> *v, int bytes, int size) {
-  for (int i = size - 1; i >= 0; --i)
-    v->push_back(bytes >> (i * 8));
-}
-
 void yyerror(const char *s) {
-  cout << "Parse error";
+  cout << "Parse error:" << s << endl;
   exit(-1);
 }

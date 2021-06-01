@@ -1,4 +1,6 @@
-assembler/a.out
+assembler/*.out
+assembler/*.o
+assembler/assembler
 assembler/bison.cpp
 assembler/bison.hpp
 assembler/flex.cpp
