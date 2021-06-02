@@ -25,6 +25,8 @@
   int ival;
   char *sval;
   std::vector<std::string> *str_list;
+	long long lval;
+	struct Op *op;
 }
 
 %token <ival> NUMBER
@@ -38,7 +40,8 @@
 %token GLOBAL EXTERN SECTION WORD SKIP EQU END
 %token <sval> SYMBOL
 %type <ival> instr_0 instr_jmp instr_1 instr_2 instr_mem
-%type <ival> operand operand_jmp lit
+%type <op> operand operand_jmp
+%type <ival> lit
 %type <str_list> sym_list
 %type <str_list> sym_lit_list
 %type <sval> sym_lit
@@ -81,26 +84,25 @@ directive:
 		}
 	}
 	| SKIP lit { pc += $2; code.addInt(0, $2); }
-	| EQU SYMBOL COMMA lit {
-	code.addSymbol($2, "ABS", $4); }
+	| EQU SYMBOL COMMA lit { code.addSymbol($2, "ABS", $4); }
 	| END;
 
 instruction:
 	instr_0 { code.addByte($1);
 		pc += 1; }
 	| instr_jmp operand_jmp { code.addByte($1);
-		code.addInt($2, 4);
-		pc += 5; }
+    code.addInt($2->val, $2->length);
+		pc += 1 + $2->length; }
 	| instr_1 REG { code.addByte($1);
-		code.addByte($2);
+		code.addByte(($2 << 4) + 0xF);
 		pc += 2; }
 	| instr_2 REG COMMA REG { code.addByte($1);
 		code.addByte(($2 << 4) + $4);
 		pc += 2; }
 	| instr_mem REG COMMA operand { code.addByte($1);
-		int tmp = ($2 << 28) + $4;
-		code.addInt(tmp, 4);
-		pc += 5; }
+		int tmp = ($2 << ($4->length * 8 - 4)) + $4->val;
+		code.addInt(tmp, $4->length);
+		pc += $4->length + 1; }
 	| PUSH REG { code.addByte(0xB0);
 		     code.addByte(($2 << 4) + 6);
 		     code.addByte((1 << 4) + 2);
@@ -133,46 +135,48 @@ instr_2:
        | CMP	{ $$ = 0x74; }
        | NOT	{ $$ = 0x80; }
        | AND	{ $$ = 0x81; }
-       | OR	{ $$ = 0x82; }
+       | OR	  { $$ = 0x82; }
        | XOR	{ $$ = 0x83; }
        | TEST	{ $$ = 0x84; }
        | SHL	{ $$ = 0x90; }
        | SHR	{ $$ = 0x91; };
 
 instr_mem:
-	LDR	{ $$ = 0xA0; }
+	LDR	  { $$ = 0xA0; }
 	| STR	{ $$ = 0xB0; };
 
 operand_jmp:
-	lit	{ $$ = $1; }
-	| SYMBOL { $$ = code.resolveSymbol($1, section, pc + 3); }
-	| PERCENT SYMBOL { $$ = (5 << 16) + pc + 5 - code.resolveSymbol($2, section, pc + 3, true); }
-	| TIMES lit { $$ = (4 << 16) + $2; }
-	| TIMES SYMBOL { $$ = (4 << 16) + code.resolveSymbol($2, section, pc + 3); }
-	| TIMES REG { $$ = ($2 << 24) + (1 << 16); }
-	| TIMES LPAREN REG RPAREN { $$ = ($3 << 24) + (2 << 16); }
-	| TIMES LPAREN REG lit RPAREN { $$ = ($3 << 24) + (3 << 16) + $4; }
-	| TIMES LPAREN REG PLUS SYMBOL RPAREN { $$ = ($3 << 24) + (3 << 16) + code.resolveSymbol($5, section, pc + 3); };
+	lit { $$ = new Op((0xF << 28) + (0 << 16) + $1, 4) ;}
+	| SYMBOL { $$ = new Op((0xF << 28) + (0 << 16) + code.resolveSymbol($1, section, pc + 3), 4); }
+	| PERCENT SYMBOL { $$ = new Op((0xF << 28) + (7 << 24) + (5 << 16) + (- pc - 5 + code.resolveSymbol($2, section, pc + 3, true) & 0xffff), 4); }
+	| TIMES lit { $$ = new Op((0xF << 28) + (4 << 16) + $2, 4); }
+	| TIMES SYMBOL { $$ = new Op((0xF << 28) + (4 << 16) + code.resolveSymbol($2, section, pc + 3), 4); }
+	| TIMES REG { $$ = new Op((0xF << 12) + ($2 << 8) + (1 << 0), 2); }
+	| TIMES LPAREN REG RPAREN { $$ = new Op((0xF << 12) + ($3 << 8) + (2 << 0), 2); }
+	| TIMES LPAREN REG lit RPAREN { $$ = new Op((0xF << 28) + ($3 << 24) + (3 << 16) + $4, 4); }
+	| TIMES LPAREN REG PLUS SYMBOL RPAREN { $$ = new Op((0xF << 28) + ($3 << 24) + (3 << 16) + code.resolveSymbol($5, section, pc + 3), 4); };
 
 operand:
-       	DOLLAR lit { $$ = $2; }
-	| DOLLAR SYMBOL { $$ = code.resolveSymbol($2, section, pc + 3); }
-	| lit { $$ = (4 << 16) + $1; }
-	| SYMBOL { $$ = (4 << 16) + code.resolveSymbol($1, section, pc + 3); }
-	| PERCENT SYMBOL { $$ = (5 << 16) + (7 << 24) + pc + 5 - code.resolveSymbol($2, section, pc + 3, true); }
-	| REG { $$ = ($1 << 24) + (1 << 16); }
-	| LPAREN REG RPAREN { $$ = ($2 << 24) + (2 << 16); }
-	| LPAREN REG lit RPAREN { $$ = ($2 << 24) + (3 << 16) + $3; }
-	| LPAREN REG PLUS SYMBOL RPAREN { $$ = ($2 << 24) + (3 << 16) + code.resolveSymbol($4, section, pc + 3); }
+       	DOLLAR lit { $$ = new Op($2, 4); }
+  | DOLLAR SYMBOL { $$ = new Op(code.resolveSymbol($2, section, pc + 3), 4); }
+  | lit { $$ = new Op((4 << 16) + $1, 4); }
+	| SYMBOL { $$ = new Op((4 << 16) + code.resolveSymbol($1, section, pc + 3), 4); }
+	| PERCENT SYMBOL { $$ = new Op((7 << 24) + (3 << 16) + (-pc - 5 + code.resolveSymbol($2, section, pc + 3, true) & 0xffff), 4); }
+	| REG { $$ = new Op(($1 << 8) + (1 << 0), 2); }
+	| LPAREN REG RPAREN { $$ = new Op(($2 << 8) + (2 << 0), 2); }
+	| LPAREN REG lit RPAREN { $$ = new Op(($2 << 24) + (3 << 16) + $3, 4); }
+	| LPAREN REG PLUS SYMBOL RPAREN { $$ = new Op(($2 << 24) + (3 << 16) + code.resolveSymbol($4, section, pc + 3), 4); }
 
 sym_list:
 	SYMBOL { $$ = new vector<string>();
 		 $$->push_back($1); }
 	| sym_list COMMA SYMBOL { $$->push_back($3); };
 
-lit: NUMBER { $$ = $1; }
-   	| PLUS NUMBER { $$ = $2; }
-	| MINUS NUMBER { $$ = (1 << 16) - $2; };
+lit: NUMBER { $$ = $1; if ($1 > 0xffff) {
+	 printf("number %d too large\n", $1);
+	 exit(1); }}
+	 | PLUS NUMBER { $$ = $2; }
+	 | MINUS NUMBER { $$ = (1 << 16) - $2; };
 
 sym_lit:
 	SYMBOL { $$ = $1; }

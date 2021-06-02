@@ -40,7 +40,7 @@ typedef struct Reloc {
 	string label;
 	bool rel;
 	string section;
-	Reloc(int o, string l, string s, bool r) {
+	Reloc(int o, const string &l, const string &s, bool r) {
     label = l;
 		section = s;
 		off = o;
@@ -61,17 +61,17 @@ private:
 	void fillSymTable();
 	void fillRels();
 public:
-	void addSymbol(string label, string section, vector<Location> *loc, bool global);
-	void addSymbol(string label, string section, int val, bool global = false);
-	int resolveSymbol(string label, string section, int loc, bool rel = false);
-  void dump();
-  void printSymbol(const Symbol &s);
-	void addReloc(string section, string label, int off, bool rel);
+	void addSymbol(const string &label, const string &section, vector<Location> *loc, bool global);
+	void addSymbol(const string &label, const string &section, int val, bool global = false);
+	int resolveSymbol(const string &label, const string &section, int loc, bool rel = false);
+  void dump() const;
+  void printSymbol(const Symbol &s) const;
+	void addReloc(const string &section, const string &label, int off, bool rel);
 	void reduce();
 	void addByte(char b);
 	void addInt(int val, int n, bool le = true);
 	void addInt(int val, int n, vector<char> &c, bool le = true);
-	void write(char *fn);
+	void write(const char *fn);
 	void addStandardSections();
 	void filterSymbols();
 	void check();

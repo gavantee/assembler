@@ -5,17 +5,17 @@
 
 using namespace std;
 
-void Code::addReloc(string section, string label, int off, bool rel) {
+void Code::addReloc(const string &section, const string &label, int off, bool rel) {
   if (relocs.find(section) == relocs.end())
     relocs[section] = vector<Reloc>();
   relocs[section].push_back(Reloc(off, label, section, rel));
 }
 
-void Code::addSymbol(string label, string section, vector<Location> *loc, bool global) {
+void Code::addSymbol(const string &label, const string &section, vector<Location> *loc, bool global) {
   symbols[label] = Symbol(label, section, 0, loc, global);
 }
 
-void Code::addSymbol(string label, string section, int val, bool global) {
+void Code::addSymbol(const string &label, const string &section, int val, bool global) {
   if (label == section) {
 		code[section] = vector<char>();
 		this->section = section;
@@ -25,7 +25,7 @@ void Code::addSymbol(string label, string section, int val, bool global) {
 		return;
 	}
 	Symbol sym = symbols[label];
-	for (Location loc : *(sym.locations)) {
+	for (const Location &loc : *(sym.locations)) {
     code[loc.section].at(loc.off) += val;
 	}
 	sym.value = val;
@@ -33,7 +33,7 @@ void Code::addSymbol(string label, string section, int val, bool global) {
 	symbols[label] = sym;
 }
 
-int Code::resolveSymbol(string label, string section, int loc, bool rel) {
+int Code::resolveSymbol(const string &label, const string &section, int loc, bool rel) {
 	  addReloc(section, label, loc - symbols[section].value, rel);
   if (symbols.find(label) == symbols.end()) {
     vector<Location> *locs = new vector<Location>();
@@ -48,7 +48,7 @@ int Code::resolveSymbol(string label, string section, int loc, bool rel) {
 	return 0;
 }
 
-void Code::dump() {
+void Code::dump() const {
   cout << hex;
 	cout << "SECTIONS:" << endl;
 	for (const auto &s : code) {
@@ -72,7 +72,7 @@ void Code::dump() {
 	}
 }
 
-void Code::printSymbol(const Symbol &s) {
+void Code::printSymbol(const Symbol &s) const {
     cout << left << setw(20) << s.label << setw(10) << s.value << setw(20) << s.section << setw(5) << (s.global ? 'g' : 'l') << endl;
 }
 
@@ -108,7 +108,7 @@ void Code::addInt(int val, int n, bool le) {
   addInt(val, n, code[section], le);
 }
 
-void push_string(vector<char> *code, string s) {
+void push_string(vector<char> *code, const string &s) {
   for (auto const &ch : s)
     code->push_back(ch);
 	code->push_back('\x00');
@@ -122,7 +122,7 @@ void Code::fillSymTable() {
   idsym = map<string, int>();
 	idsym["ABS"] = 0;
 	int i = 0;
-  for (auto &s : symbols) {
+  for (const auto &s : symbols) {
     idsym[s.first] = ++i;
     addInt(id[s.first], 4, *symtab, false); // name
 		addInt(s.second.value, 4, *symtab, false); // value
@@ -141,9 +141,9 @@ void Code::fillSymTable() {
 
 void Code::fillRels() {
   vector<char> *rel;
-  for (auto &r : relocs) {
+  for (const auto &r : relocs) {
     rel = &code[".rel" + r.first];
-		for (auto re : r.second) {
+		for (const auto &re : r.second) {
 		  addInt(re.off, 4, *rel, false);
 			addInt(re.rel + 2, 1, *rel, false);
 		  addInt(idsym[re.label], 3, *rel, false);
@@ -153,7 +153,7 @@ void Code::fillRels() {
 
 void Code::filterSymbols() {
   map<string, Symbol> tmp = map<string, Symbol>();
-	for (auto &s : symbols) {
+	for (const auto &s : symbols) {
     if (s.second.global)
     tmp[s.first] = s.second;
 	}
@@ -192,7 +192,7 @@ void Code::addStandardSections() {
 
 	i = 0;
 	idsec = map<string, int>();
-	for (auto &s : code) {
+	for (auto const &s : code) {
     idsec[s.first] = i++;
 	}
 
@@ -205,7 +205,7 @@ void writeInt(int val, int n, FILE *f) {
   fprintf(f, "%c", val >> (i * 8));
 }
 
-void Code::write(char *fn) {
+void Code::write(const char *fn) {
 
   const char magic[] = "\x7f\x45\x4c\x46\x01\x01\x01\x03" \
 								       "\x00\x00\x00\x00\x00\x00\x00\x00" \
@@ -219,7 +219,7 @@ void Code::write(char *fn) {
 	int off = 0x34;
 	int num = 0;
 	int strid = 0;
-  for (auto &s : code) {
+  for (const auto &s : code) {
     off += s.second.size();
 		if (s.first == ".strtab") strid = num;
 		++num;
@@ -238,7 +238,7 @@ void Code::write(char *fn) {
       fprintf(outfile, "%c", ch);
   }
 	off = 0x34;
-  for (auto &s : code) {
+  for (const auto &s : code) {
     writeInt(id[s.first], 4, outfile);
 		int type = 1;
 		int link = 0;
@@ -248,7 +248,7 @@ void Code::write(char *fn) {
       type = 2;
 			entsize = 16;
 			link = idsec[".strtab"];
-			info = symbols.size();
+			info = symbols.size() + 1;
 		}
 		else if (s.first == ".strtab") {
       type = 3;
@@ -274,7 +274,7 @@ void Code::write(char *fn) {
 	}
 }
 void Code::check() {
-  for (auto &s : symbols) {
+  for (const auto &s : symbols) {
     if (s.second.section == "UND") {
       cout << "Symbol " << s.first << " undefined";
 		  exit(-1);

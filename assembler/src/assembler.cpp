@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     printf("usage: %s [-o <output_file>] <input_file>", argv[0]);
 		return 0;
 	}
-  char *outfn = "out.o";
+  char *outfn = NULL;
   char *infn;
   if (strcmp(argv[1], "-o") == 0) {
     outfn = argv[2];
@@ -34,5 +34,7 @@ int main(int argc, char* argv[]) {
 	code.addStandardSections();
 	// code.filterSymbols();
 	code.dump();
-	code.write(outfn);
+	if (outfn != NULL)
+	  code.write(outfn);
+	else code.write("out.o");
 }
