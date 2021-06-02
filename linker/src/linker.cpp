@@ -76,7 +76,7 @@ section_s *read_section(FILE* in, code_s *code) {
 	sec->type = read_int(in, 4);
 	fseek(in, 4, SEEK_CUR);
 	sec->addr = read_int(in, 4);
-	sec->off = read_int(in, 4);
+	sec->off  = read_int(in, 4);
 	sec->size = read_int(in, 4);
 	sec->link = read_int(in, 4);
 	sec->info = read_int(in, 4);
@@ -93,7 +93,7 @@ unsigned char *get_name(code_s *code, int off) {
 }
 
 void print_symbol(code_s *code, symbol_s *sym, int id) {
-  printf("%02x: %-16s %04X %02X %02X %02X %02X\n", id, get_name(code, sym->name), sym->value, sym->size, sym->info, sym->other, sym->shndx);
+  printf("%02x: %-16s %04X %02X %02X %02X %-16s\n", id, get_name(code, sym->name), sym->value, sym->size, sym->info, sym->other, get_name(code, code->secs[sym->shndx]->name));
 }
 
 void print_symbols(code_s *code) {
@@ -114,13 +114,15 @@ void print_strtab(code_s *code) {
 }
 
 void print_reloc(code_s *code, reloc_s *reloc) {
-  printf("%02X %02X %02X\n", reloc->off, reloc->info >> 8, reloc->info & 0xff);
+  symbol_s *sym =(symbol_s *) (code->secs[code->symndx]->data + (reloc->info >> 8) * 0x10);
+  printf("%02X %-10s %c\n", reloc->off, get_name(code, sym->name), ((reloc->info & 0xff) == 2) ? 'a' : 'r');
 }
 
 void print_relocs(code_s *code, int id) {
   section_s *reloctab = code->secs[id];
 	reloc_s *relocs = (reloc_s *) reloctab->data;
 	int n = reloctab->size / reloctab->entsize;
+	printf("relocation section for: %d (%s)\n", reloctab->info, get_name(code, code->secs[reloctab->info]->name));
 	for (int i = 0; i < n; ++i)
     print_reloc(code, relocs + i);
 }
@@ -177,7 +179,7 @@ void add_symbol(code_s *code, symbol_s *sym, int id) {
   section_s *symtab = code->secs[code->symndx];
 	int n = symtab->size / symtab->entsize;
 	symbol_s *syms = (symbol_s *) symtab->data;
-	for (int i = 0; i < n; ++i) {
+	for (int i = 0; i < n && (sym->info & 0xf) != 0x03 /* section */; ++i) {
     symbol_s *cur = syms + i;
 		if (strcmp((char *) get_name(code, cur->name), (char *) get_name(code, sym->name)) == 0) {
       if (sym->shndx == 0) {
@@ -212,6 +214,48 @@ void add_symtab(code_s *code, section_s *newsym) {
 	for (int i = 0; i < newsym->size / newsym->entsize; ++i) {
     symbol_s *sym = (symbol_s *) (newsym->data + i * newsym->entsize);
 		add_symbol(code, sym, i);
+	}
+}
+
+void write_int(int val, int n, FILE *f) {
+ for (int i = 0; i < n; ++i)
+  fprintf(f, "%c", val >> (i * 8));
+}
+
+void write_elf(code_s *code, const char *fn) {
+  FILE *outfile = fopen(fn, "wb");
+  const char magic[] = "\x7f\x45\x4c\x46\x01\x01\x01\x03" \
+								       "\x00\x00\x00\x00\x00\x00\x00\x00" \
+								       "\x01\x00\x28\x00\x01\x00\x00\x00" \
+								       "\x00\x00\x00\x00\x00\x00\x00";
+
+	fwrite(magic, sizeof(magic), 1, outfile);
+	int off = 0x34;
+	for (int i = 0; i < code->secnum; ++i) {
+    code->secs[i]->off = off;
+    off += code->secs[i]->size;
+	}
+	write_int(off, 4, outfile);   // e_shoff
+	write_int(0, 4, outfile);     // e_flags
+	write_int(0x34, 2, outfile);  // e_ehsize
+	write_int(0, 2, outfile);     // e_phentsize
+	write_int(0, 2, outfile);     // e_phnum
+	write_int(0x28, 2, outfile);  // e_shentsize
+	write_int(code->secnum, 2, outfile);   // e_shnum
+	write_int(code->strndx, 2, outfile); // e_shstrndx
+	for (int i = 0; i < code->secnum; ++i)
+    fwrite(code->secs[i]->data, code->secs[i]->size, 1, outfile);
+	for (int i = 0; i < code->secnum; ++i) {
+    section_s *s = code->secs[i];
+    write_int(s->name, 4, outfile);
+		write_int(s->type, 4, outfile);
+		write_int(0, 8, outfile);
+    write_int(s->off, 4, outfile);
+		write_int(s->size, 4, outfile);
+		write_int(s->link, 4, outfile);
+		write_int(s->info, 4, outfile);
+		write_int(1, 4, outfile);
+		write_int(s->entsize, 4, outfile);
 	}
 }
 
@@ -263,7 +307,7 @@ int main(int argc, char *argv[]) {
 			}
 			if (!code->first && tmp->type == 0x09) {
 				tmp->info += code->secnum - 2;
-				tmp->link += code->secnum - 2;
+				tmp->link = code->symndx;
 			}
 		  code->secs[j] = tmp;
 			if(code->secs[j]->type == 0x02 && code->first == true)
@@ -278,4 +322,6 @@ int main(int argc, char *argv[]) {
 	}
   for (int j = 0; j < code->secnum; ++j)
     print_section(code, j);
+
+	write_elf(code, "out.o");
 }
