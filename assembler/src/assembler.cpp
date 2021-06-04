@@ -31,8 +31,8 @@ int main(int argc, char* argv[]) {
 
 	code.check();
 	code.reduce();
+	code.filterSymbols();
 	code.addStandardSections();
-	// code.filterSymbols();
 	code.dump();
 	if (outfn != NULL)
 	  code.write(outfn);

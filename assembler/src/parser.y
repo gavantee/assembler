@@ -19,6 +19,7 @@
   string section = "NO_SEC";
 
   void yyerror(const char *s);
+	unsigned short reverse_bytes(unsigned short i);
 %}
 
 %union {
@@ -146,26 +147,26 @@ instr_mem:
 	| STR	{ $$ = 0xB0; };
 
 operand_jmp:
-	lit { $$ = new Op((0xF << 28) + (0 << 16) + $1, 4) ;}
-	| SYMBOL { $$ = new Op((0xF << 28) + (0 << 16) + code.resolveSymbol($1, section, pc + 3), 4); }
-	| PERCENT SYMBOL { $$ = new Op((0xF << 28) + (7 << 24) + (5 << 16) + (- pc - 5 + code.resolveSymbol($2, section, pc + 3, true) & 0xffff), 4); }
-	| TIMES lit { $$ = new Op((0xF << 28) + (4 << 16) + $2, 4); }
-	| TIMES SYMBOL { $$ = new Op((0xF << 28) + (4 << 16) + code.resolveSymbol($2, section, pc + 3), 4); }
+	lit { $$ = new Op((0xF << 28) + (0 << 16) + reverse_bytes($1), 4) ;}
+	| SYMBOL { $$ = new Op((0xF << 28) + (0 << 16) + reverse_bytes(code.resolveSymbol($1, section, pc + 3)), 4); }
+	| PERCENT SYMBOL { $$ = new Op((0xF << 28) + (7 << 24) + (5 << 16) + reverse_bytes(- 2 + code.resolveSymbol($2, section, pc + 3, true) & 0xffff), 4); }
+	| TIMES lit { $$ = new Op((0xF << 28) + (4 << 16) + reverse_bytes($2), 4); }
+	| TIMES SYMBOL { $$ = new Op((0xF << 28) + (4 << 16) + reverse_bytes(code.resolveSymbol($2, section, pc + 3)), 4); }
 	| TIMES REG { $$ = new Op((0xF << 12) + ($2 << 8) + (1 << 0), 2); }
 	| TIMES LPAREN REG RPAREN { $$ = new Op((0xF << 12) + ($3 << 8) + (2 << 0), 2); }
-	| TIMES LPAREN REG lit RPAREN { $$ = new Op((0xF << 28) + ($3 << 24) + (3 << 16) + $4, 4); }
-	| TIMES LPAREN REG PLUS SYMBOL RPAREN { $$ = new Op((0xF << 28) + ($3 << 24) + (3 << 16) + code.resolveSymbol($5, section, pc + 3), 4); };
+	| TIMES LPAREN REG lit RPAREN { $$ = new Op((0xF << 28) + ($3 << 24) + (3 << 16) + reverse_bytes($4), 4); }
+	| TIMES LPAREN REG PLUS SYMBOL RPAREN { $$ = new Op((0xF << 28) + ($3 << 24) + (3 << 16) + reverse_bytes(code.resolveSymbol($5, section, pc + 3)), 4); };
 
 operand:
-       	DOLLAR lit { $$ = new Op($2, 4); }
-  | DOLLAR SYMBOL { $$ = new Op(code.resolveSymbol($2, section, pc + 3), 4); }
-  | lit { $$ = new Op((4 << 16) + $1, 4); }
-	| SYMBOL { $$ = new Op((4 << 16) + code.resolveSymbol($1, section, pc + 3), 4); }
-	| PERCENT SYMBOL { $$ = new Op((7 << 24) + (3 << 16) + (-pc - 5 + code.resolveSymbol($2, section, pc + 3, true) & 0xffff), 4); }
+       	DOLLAR lit { $$ = new Op(reverse_bytes($2), 4); }
+  | DOLLAR SYMBOL { $$ = new Op(reverse_bytes(code.resolveSymbol($2, section, pc + 3)), 4); }
+  | lit { $$ = new Op((4 << 16) + reverse_bytes($1), 4); }
+	| SYMBOL { $$ = new Op((4 << 16) + reverse_bytes(code.resolveSymbol($1, section, pc + 3)), 4); }
+	| PERCENT SYMBOL { $$ = new Op((7 << 24) + (3 << 16)  + reverse_bytes(- 2 + code.resolveSymbol($2, section, pc + 3, true) & 0xffff), 4); }
 	| REG { $$ = new Op(($1 << 8) + (1 << 0), 2); }
 	| LPAREN REG RPAREN { $$ = new Op(($2 << 8) + (2 << 0), 2); }
-	| LPAREN REG lit RPAREN { $$ = new Op(($2 << 24) + (3 << 16) + $3, 4); }
-	| LPAREN REG PLUS SYMBOL RPAREN { $$ = new Op(($2 << 24) + (3 << 16) + code.resolveSymbol($4, section, pc + 3), 4); }
+	| LPAREN REG lit RPAREN { $$ = new Op(($2 << 24) + (3 << 16) + reverse_bytes($3), 4); }
+	| LPAREN REG PLUS SYMBOL RPAREN { $$ = new Op(($2 << 24) + (3 << 16) + reverse_bytes(code.resolveSymbol($4, section, pc + 3)), 4); }
 
 sym_list:
 	SYMBOL { $$ = new vector<string>();
@@ -190,6 +191,10 @@ sym_lit_list:
 	| sym_lit_list COMMA sym_lit {$$->push_back($3); };
 
 %%
+
+unsigned short reverse_bytes(unsigned short i) {
+  return ((i & 0xff) << 8) + ((i & 0xff00) >> 8);
+}
 void yyerror(const char *s) {
   cout << "Parse error:" << s << endl;
   exit(-1);

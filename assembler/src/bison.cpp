@@ -89,8 +89,9 @@
   string section = "NO_SEC";
 
   void yyerror(const char *s);
+	unsigned short reverse_bytes(unsigned short i);
 
-#line 94 "src/bison.cpp"
+#line 95 "src/bison.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -569,14 +570,14 @@ static const yytype_int8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    52,    52,    53,    56,    57,    58,    61,    64,    65,
-      68,    71,    74,    77,    86,    87,    88,    91,    93,    96,
-      99,   102,   106,   110,   116,   117,   118,   121,   122,   123,
-     124,   125,   127,   130,   131,   132,   133,   134,   135,   136,
-     137,   138,   139,   140,   141,   142,   145,   146,   149,   150,
-     151,   152,   153,   154,   155,   156,   157,   160,   161,   162,
-     163,   164,   165,   166,   167,   168,   171,   173,   175,   178,
-     179,   182,   183,   188,   190
+       0,    53,    53,    54,    57,    58,    59,    62,    65,    66,
+      69,    72,    75,    78,    87,    88,    89,    92,    94,    97,
+     100,   103,   107,   111,   117,   118,   119,   122,   123,   124,
+     125,   126,   128,   131,   132,   133,   134,   135,   136,   137,
+     138,   139,   140,   141,   142,   143,   146,   147,   150,   151,
+     152,   153,   154,   155,   156,   157,   158,   161,   162,   163,
+     164,   165,   166,   167,   168,   169,   172,   174,   176,   179,
+     180,   183,   184,   189,   191
 };
 #endif
 
@@ -1234,37 +1235,37 @@ yyreduce:
   switch (yyn)
     {
   case 7: /* label: SYMBOL COLON  */
-#line 61 "src/parser.y"
+#line 62 "src/parser.y"
                   { code.addSymbol((yyvsp[-1].sval), section, pc); }
-#line 1240 "src/bison.cpp"
+#line 1241 "src/bison.cpp"
     break;
 
   case 10: /* directive: GLOBAL sym_list  */
-#line 68 "src/parser.y"
+#line 69 "src/parser.y"
                         {
 			  for (string s : *((yyvsp[0].str_list)))
 			  	code.addSymbol(s, section, new vector<Location>(), true); }
-#line 1248 "src/bison.cpp"
+#line 1249 "src/bison.cpp"
     break;
 
   case 11: /* directive: EXTERN sym_list  */
-#line 71 "src/parser.y"
+#line 72 "src/parser.y"
                           {
 			    for (string s : *((yyvsp[0].str_list))) {
 			      code.addSymbol(s, "EXT", new vector<Location>(), true); }}
-#line 1256 "src/bison.cpp"
+#line 1257 "src/bison.cpp"
     break;
 
   case 12: /* directive: SECTION SYMBOL  */
-#line 74 "src/parser.y"
+#line 75 "src/parser.y"
                          { pc = 0;
 	                   section = (yyvsp[0].sval);
 	                   code.addSymbol((yyvsp[0].sval), section, pc, true);}
-#line 1264 "src/bison.cpp"
+#line 1265 "src/bison.cpp"
     break;
 
   case 13: /* directive: WORD sym_lit_list  */
-#line 77 "src/parser.y"
+#line 78 "src/parser.y"
                             {
 		for (string s : *((yyvsp[0].str_list))) {
 		  int tmp;
@@ -1274,393 +1275,393 @@ yyreduce:
 		  code.addInt(tmp, 2);
 		}
 	}
-#line 1278 "src/bison.cpp"
+#line 1279 "src/bison.cpp"
     break;
 
   case 14: /* directive: SKIP lit  */
-#line 86 "src/parser.y"
+#line 87 "src/parser.y"
                    { pc += (yyvsp[0].ival); code.addInt(0, (yyvsp[0].ival)); }
-#line 1284 "src/bison.cpp"
+#line 1285 "src/bison.cpp"
     break;
 
   case 15: /* directive: EQU SYMBOL COMMA lit  */
-#line 87 "src/parser.y"
+#line 88 "src/parser.y"
                                { code.addSymbol((yyvsp[-2].sval), "ABS", (yyvsp[0].ival)); }
-#line 1290 "src/bison.cpp"
+#line 1291 "src/bison.cpp"
     break;
 
   case 17: /* instruction: instr_0  */
-#line 91 "src/parser.y"
+#line 92 "src/parser.y"
                 { code.addByte((yyvsp[0].ival));
 		pc += 1; }
-#line 1297 "src/bison.cpp"
+#line 1298 "src/bison.cpp"
     break;
 
   case 18: /* instruction: instr_jmp operand_jmp  */
-#line 93 "src/parser.y"
+#line 94 "src/parser.y"
                                 { code.addByte((yyvsp[-1].ival));
     code.addInt((yyvsp[0].op)->val, (yyvsp[0].op)->length);
 		pc += 1 + (yyvsp[0].op)->length; }
-#line 1305 "src/bison.cpp"
+#line 1306 "src/bison.cpp"
     break;
 
   case 19: /* instruction: instr_1 REG  */
-#line 96 "src/parser.y"
+#line 97 "src/parser.y"
                       { code.addByte((yyvsp[-1].ival));
 		code.addByte(((yyvsp[0].ival) << 4) + 0xF);
 		pc += 2; }
-#line 1313 "src/bison.cpp"
+#line 1314 "src/bison.cpp"
     break;
 
   case 20: /* instruction: instr_2 REG COMMA REG  */
-#line 99 "src/parser.y"
+#line 100 "src/parser.y"
                                 { code.addByte((yyvsp[-3].ival));
 		code.addByte(((yyvsp[-2].ival) << 4) + (yyvsp[0].ival));
 		pc += 2; }
-#line 1321 "src/bison.cpp"
+#line 1322 "src/bison.cpp"
     break;
 
   case 21: /* instruction: instr_mem REG COMMA operand  */
-#line 102 "src/parser.y"
+#line 103 "src/parser.y"
                                       { code.addByte((yyvsp[-3].ival));
 		int tmp = ((yyvsp[-2].ival) << ((yyvsp[0].op)->length * 8 - 4)) + (yyvsp[0].op)->val;
 		code.addInt(tmp, (yyvsp[0].op)->length);
 		pc += (yyvsp[0].op)->length + 1; }
-#line 1330 "src/bison.cpp"
+#line 1331 "src/bison.cpp"
     break;
 
   case 22: /* instruction: PUSH REG  */
-#line 106 "src/parser.y"
+#line 107 "src/parser.y"
                    { code.addByte(0xB0);
 		     code.addByte(((yyvsp[0].ival) << 4) + 6);
 		     code.addByte((1 << 4) + 2);
 		     pc += 3; }
-#line 1339 "src/bison.cpp"
+#line 1340 "src/bison.cpp"
     break;
 
   case 23: /* instruction: POP REG  */
-#line 110 "src/parser.y"
+#line 111 "src/parser.y"
                    { code.addByte(0xA0);
 		     code.addByte(((yyvsp[0].ival) << 4) + 6);
 		     code.addByte((4 << 4) + 2);
 		     pc += 3; }
-#line 1348 "src/bison.cpp"
+#line 1349 "src/bison.cpp"
     break;
 
   case 24: /* instr_0: HALT  */
-#line 116 "src/parser.y"
+#line 117 "src/parser.y"
                 { (yyval.ival) = 0x00; }
-#line 1354 "src/bison.cpp"
+#line 1355 "src/bison.cpp"
     break;
 
   case 25: /* instr_0: IRET  */
-#line 117 "src/parser.y"
+#line 118 "src/parser.y"
                 { (yyval.ival) = 0x20; }
-#line 1360 "src/bison.cpp"
+#line 1361 "src/bison.cpp"
     break;
 
   case 26: /* instr_0: RET  */
-#line 118 "src/parser.y"
+#line 119 "src/parser.y"
                 { (yyval.ival) = 0x40; }
-#line 1366 "src/bison.cpp"
+#line 1367 "src/bison.cpp"
     break;
 
   case 27: /* instr_jmp: CALL  */
-#line 121 "src/parser.y"
+#line 122 "src/parser.y"
                 { (yyval.ival) = 0x30; }
-#line 1372 "src/bison.cpp"
+#line 1373 "src/bison.cpp"
     break;
 
   case 28: /* instr_jmp: JMP  */
-#line 122 "src/parser.y"
+#line 123 "src/parser.y"
                 { (yyval.ival) = 0x50; }
-#line 1378 "src/bison.cpp"
+#line 1379 "src/bison.cpp"
     break;
 
   case 29: /* instr_jmp: JEQ  */
-#line 123 "src/parser.y"
+#line 124 "src/parser.y"
                 { (yyval.ival) = 0x51; }
-#line 1384 "src/bison.cpp"
+#line 1385 "src/bison.cpp"
     break;
 
   case 30: /* instr_jmp: JNE  */
-#line 124 "src/parser.y"
+#line 125 "src/parser.y"
                 { (yyval.ival) = 0x52; }
-#line 1390 "src/bison.cpp"
+#line 1391 "src/bison.cpp"
     break;
 
   case 31: /* instr_jmp: JGT  */
-#line 125 "src/parser.y"
+#line 126 "src/parser.y"
                 { (yyval.ival) = 0x53; }
-#line 1396 "src/bison.cpp"
+#line 1397 "src/bison.cpp"
     break;
 
   case 32: /* instr_1: INT  */
-#line 127 "src/parser.y"
+#line 128 "src/parser.y"
                 { (yyval.ival) = 0x10; }
-#line 1402 "src/bison.cpp"
+#line 1403 "src/bison.cpp"
     break;
 
   case 33: /* instr_2: XCHG  */
-#line 130 "src/parser.y"
+#line 131 "src/parser.y"
                 { (yyval.ival) = 0x60; }
-#line 1408 "src/bison.cpp"
+#line 1409 "src/bison.cpp"
     break;
 
   case 34: /* instr_2: ADD  */
-#line 131 "src/parser.y"
+#line 132 "src/parser.y"
                 { (yyval.ival) = 0x70; }
-#line 1414 "src/bison.cpp"
+#line 1415 "src/bison.cpp"
     break;
 
   case 35: /* instr_2: SUB  */
-#line 132 "src/parser.y"
+#line 133 "src/parser.y"
                 { (yyval.ival) = 0x71; }
-#line 1420 "src/bison.cpp"
+#line 1421 "src/bison.cpp"
     break;
 
   case 36: /* instr_2: MUL  */
-#line 133 "src/parser.y"
+#line 134 "src/parser.y"
                 { (yyval.ival) = 0x72; }
-#line 1426 "src/bison.cpp"
+#line 1427 "src/bison.cpp"
     break;
 
   case 37: /* instr_2: DIV  */
-#line 134 "src/parser.y"
+#line 135 "src/parser.y"
                 { (yyval.ival) = 0x73; }
-#line 1432 "src/bison.cpp"
+#line 1433 "src/bison.cpp"
     break;
 
   case 38: /* instr_2: CMP  */
-#line 135 "src/parser.y"
+#line 136 "src/parser.y"
                 { (yyval.ival) = 0x74; }
-#line 1438 "src/bison.cpp"
+#line 1439 "src/bison.cpp"
     break;
 
   case 39: /* instr_2: NOT  */
-#line 136 "src/parser.y"
+#line 137 "src/parser.y"
                 { (yyval.ival) = 0x80; }
-#line 1444 "src/bison.cpp"
+#line 1445 "src/bison.cpp"
     break;
 
   case 40: /* instr_2: AND  */
-#line 137 "src/parser.y"
+#line 138 "src/parser.y"
                 { (yyval.ival) = 0x81; }
-#line 1450 "src/bison.cpp"
+#line 1451 "src/bison.cpp"
     break;
 
   case 41: /* instr_2: OR  */
-#line 138 "src/parser.y"
+#line 139 "src/parser.y"
                   { (yyval.ival) = 0x82; }
-#line 1456 "src/bison.cpp"
+#line 1457 "src/bison.cpp"
     break;
 
   case 42: /* instr_2: XOR  */
-#line 139 "src/parser.y"
+#line 140 "src/parser.y"
                 { (yyval.ival) = 0x83; }
-#line 1462 "src/bison.cpp"
+#line 1463 "src/bison.cpp"
     break;
 
   case 43: /* instr_2: TEST  */
-#line 140 "src/parser.y"
+#line 141 "src/parser.y"
                 { (yyval.ival) = 0x84; }
-#line 1468 "src/bison.cpp"
+#line 1469 "src/bison.cpp"
     break;
 
   case 44: /* instr_2: SHL  */
-#line 141 "src/parser.y"
+#line 142 "src/parser.y"
                 { (yyval.ival) = 0x90; }
-#line 1474 "src/bison.cpp"
+#line 1475 "src/bison.cpp"
     break;
 
   case 45: /* instr_2: SHR  */
-#line 142 "src/parser.y"
+#line 143 "src/parser.y"
                 { (yyval.ival) = 0x91; }
-#line 1480 "src/bison.cpp"
+#line 1481 "src/bison.cpp"
     break;
 
   case 46: /* instr_mem: LDR  */
-#line 145 "src/parser.y"
+#line 146 "src/parser.y"
                   { (yyval.ival) = 0xA0; }
-#line 1486 "src/bison.cpp"
+#line 1487 "src/bison.cpp"
     break;
 
   case 47: /* instr_mem: STR  */
-#line 146 "src/parser.y"
+#line 147 "src/parser.y"
                 { (yyval.ival) = 0xB0; }
-#line 1492 "src/bison.cpp"
+#line 1493 "src/bison.cpp"
     break;
 
   case 48: /* operand_jmp: lit  */
-#line 149 "src/parser.y"
-            { (yyval.op) = new Op((0xF << 28) + (0 << 16) + (yyvsp[0].ival), 4) ;}
-#line 1498 "src/bison.cpp"
+#line 150 "src/parser.y"
+            { (yyval.op) = new Op((0xF << 28) + (0 << 16) + reverse_bytes((yyvsp[0].ival)), 4) ;}
+#line 1499 "src/bison.cpp"
     break;
 
   case 49: /* operand_jmp: SYMBOL  */
-#line 150 "src/parser.y"
-                 { (yyval.op) = new Op((0xF << 28) + (0 << 16) + code.resolveSymbol((yyvsp[0].sval), section, pc + 3), 4); }
-#line 1504 "src/bison.cpp"
+#line 151 "src/parser.y"
+                 { (yyval.op) = new Op((0xF << 28) + (0 << 16) + reverse_bytes(code.resolveSymbol((yyvsp[0].sval), section, pc + 3)), 4); }
+#line 1505 "src/bison.cpp"
     break;
 
   case 50: /* operand_jmp: PERCENT SYMBOL  */
-#line 151 "src/parser.y"
-                         { (yyval.op) = new Op((0xF << 28) + (7 << 24) + (5 << 16) + (- pc - 5 + code.resolveSymbol((yyvsp[0].sval), section, pc + 3, true) & 0xffff), 4); }
-#line 1510 "src/bison.cpp"
+#line 152 "src/parser.y"
+                         { (yyval.op) = new Op((0xF << 28) + (7 << 24) + (5 << 16) + reverse_bytes(- 2 + code.resolveSymbol((yyvsp[0].sval), section, pc + 3, true) & 0xffff), 4); }
+#line 1511 "src/bison.cpp"
     break;
 
   case 51: /* operand_jmp: TIMES lit  */
-#line 152 "src/parser.y"
-                    { (yyval.op) = new Op((0xF << 28) + (4 << 16) + (yyvsp[0].ival), 4); }
-#line 1516 "src/bison.cpp"
+#line 153 "src/parser.y"
+                    { (yyval.op) = new Op((0xF << 28) + (4 << 16) + reverse_bytes((yyvsp[0].ival)), 4); }
+#line 1517 "src/bison.cpp"
     break;
 
   case 52: /* operand_jmp: TIMES SYMBOL  */
-#line 153 "src/parser.y"
-                       { (yyval.op) = new Op((0xF << 28) + (4 << 16) + code.resolveSymbol((yyvsp[0].sval), section, pc + 3), 4); }
-#line 1522 "src/bison.cpp"
+#line 154 "src/parser.y"
+                       { (yyval.op) = new Op((0xF << 28) + (4 << 16) + reverse_bytes(code.resolveSymbol((yyvsp[0].sval), section, pc + 3)), 4); }
+#line 1523 "src/bison.cpp"
     break;
 
   case 53: /* operand_jmp: TIMES REG  */
-#line 154 "src/parser.y"
+#line 155 "src/parser.y"
                     { (yyval.op) = new Op((0xF << 12) + ((yyvsp[0].ival) << 8) + (1 << 0), 2); }
-#line 1528 "src/bison.cpp"
+#line 1529 "src/bison.cpp"
     break;
 
   case 54: /* operand_jmp: TIMES LPAREN REG RPAREN  */
-#line 155 "src/parser.y"
+#line 156 "src/parser.y"
                                   { (yyval.op) = new Op((0xF << 12) + ((yyvsp[-1].ival) << 8) + (2 << 0), 2); }
-#line 1534 "src/bison.cpp"
+#line 1535 "src/bison.cpp"
     break;
 
   case 55: /* operand_jmp: TIMES LPAREN REG lit RPAREN  */
-#line 156 "src/parser.y"
-                                      { (yyval.op) = new Op((0xF << 28) + ((yyvsp[-2].ival) << 24) + (3 << 16) + (yyvsp[-1].ival), 4); }
-#line 1540 "src/bison.cpp"
+#line 157 "src/parser.y"
+                                      { (yyval.op) = new Op((0xF << 28) + ((yyvsp[-2].ival) << 24) + (3 << 16) + reverse_bytes((yyvsp[-1].ival)), 4); }
+#line 1541 "src/bison.cpp"
     break;
 
   case 56: /* operand_jmp: TIMES LPAREN REG PLUS SYMBOL RPAREN  */
-#line 157 "src/parser.y"
-                                              { (yyval.op) = new Op((0xF << 28) + ((yyvsp[-3].ival) << 24) + (3 << 16) + code.resolveSymbol((yyvsp[-1].sval), section, pc + 3), 4); }
-#line 1546 "src/bison.cpp"
+#line 158 "src/parser.y"
+                                              { (yyval.op) = new Op((0xF << 28) + ((yyvsp[-3].ival) << 24) + (3 << 16) + reverse_bytes(code.resolveSymbol((yyvsp[-1].sval), section, pc + 3)), 4); }
+#line 1547 "src/bison.cpp"
     break;
 
   case 57: /* operand: DOLLAR lit  */
-#line 160 "src/parser.y"
-                   { (yyval.op) = new Op((yyvsp[0].ival), 4); }
-#line 1552 "src/bison.cpp"
+#line 161 "src/parser.y"
+                   { (yyval.op) = new Op(reverse_bytes((yyvsp[0].ival)), 4); }
+#line 1553 "src/bison.cpp"
     break;
 
   case 58: /* operand: DOLLAR SYMBOL  */
-#line 161 "src/parser.y"
-                  { (yyval.op) = new Op(code.resolveSymbol((yyvsp[0].sval), section, pc + 3), 4); }
-#line 1558 "src/bison.cpp"
+#line 162 "src/parser.y"
+                  { (yyval.op) = new Op(reverse_bytes(code.resolveSymbol((yyvsp[0].sval), section, pc + 3)), 4); }
+#line 1559 "src/bison.cpp"
     break;
 
   case 59: /* operand: lit  */
-#line 162 "src/parser.y"
-        { (yyval.op) = new Op((4 << 16) + (yyvsp[0].ival), 4); }
-#line 1564 "src/bison.cpp"
+#line 163 "src/parser.y"
+        { (yyval.op) = new Op((4 << 16) + reverse_bytes((yyvsp[0].ival)), 4); }
+#line 1565 "src/bison.cpp"
     break;
 
   case 60: /* operand: SYMBOL  */
-#line 163 "src/parser.y"
-                 { (yyval.op) = new Op((4 << 16) + code.resolveSymbol((yyvsp[0].sval), section, pc + 3), 4); }
-#line 1570 "src/bison.cpp"
+#line 164 "src/parser.y"
+                 { (yyval.op) = new Op((4 << 16) + reverse_bytes(code.resolveSymbol((yyvsp[0].sval), section, pc + 3)), 4); }
+#line 1571 "src/bison.cpp"
     break;
 
   case 61: /* operand: PERCENT SYMBOL  */
-#line 164 "src/parser.y"
-                         { (yyval.op) = new Op((7 << 24) + (3 << 16) + (-pc - 5 + code.resolveSymbol((yyvsp[0].sval), section, pc + 3, true) & 0xffff), 4); }
-#line 1576 "src/bison.cpp"
+#line 165 "src/parser.y"
+                         { (yyval.op) = new Op((7 << 24) + (3 << 16)  + reverse_bytes(- 2 + code.resolveSymbol((yyvsp[0].sval), section, pc + 3, true) & 0xffff), 4); }
+#line 1577 "src/bison.cpp"
     break;
 
   case 62: /* operand: REG  */
-#line 165 "src/parser.y"
+#line 166 "src/parser.y"
               { (yyval.op) = new Op(((yyvsp[0].ival) << 8) + (1 << 0), 2); }
-#line 1582 "src/bison.cpp"
+#line 1583 "src/bison.cpp"
     break;
 
   case 63: /* operand: LPAREN REG RPAREN  */
-#line 166 "src/parser.y"
+#line 167 "src/parser.y"
                             { (yyval.op) = new Op(((yyvsp[-1].ival) << 8) + (2 << 0), 2); }
-#line 1588 "src/bison.cpp"
+#line 1589 "src/bison.cpp"
     break;
 
   case 64: /* operand: LPAREN REG lit RPAREN  */
-#line 167 "src/parser.y"
-                                { (yyval.op) = new Op(((yyvsp[-2].ival) << 24) + (3 << 16) + (yyvsp[-1].ival), 4); }
-#line 1594 "src/bison.cpp"
+#line 168 "src/parser.y"
+                                { (yyval.op) = new Op(((yyvsp[-2].ival) << 24) + (3 << 16) + reverse_bytes((yyvsp[-1].ival)), 4); }
+#line 1595 "src/bison.cpp"
     break;
 
   case 65: /* operand: LPAREN REG PLUS SYMBOL RPAREN  */
-#line 168 "src/parser.y"
-                                        { (yyval.op) = new Op(((yyvsp[-3].ival) << 24) + (3 << 16) + code.resolveSymbol((yyvsp[-1].sval), section, pc + 3), 4); }
-#line 1600 "src/bison.cpp"
+#line 169 "src/parser.y"
+                                        { (yyval.op) = new Op(((yyvsp[-3].ival) << 24) + (3 << 16) + reverse_bytes(code.resolveSymbol((yyvsp[-1].sval), section, pc + 3)), 4); }
+#line 1601 "src/bison.cpp"
     break;
 
   case 66: /* sym_list: SYMBOL  */
-#line 171 "src/parser.y"
+#line 172 "src/parser.y"
                { (yyval.str_list) = new vector<string>();
 		 (yyval.str_list)->push_back((yyvsp[0].sval)); }
-#line 1607 "src/bison.cpp"
+#line 1608 "src/bison.cpp"
     break;
 
   case 67: /* sym_list: sym_list COMMA SYMBOL  */
-#line 173 "src/parser.y"
+#line 174 "src/parser.y"
                                 { (yyval.str_list)->push_back((yyvsp[0].sval)); }
-#line 1613 "src/bison.cpp"
+#line 1614 "src/bison.cpp"
     break;
 
   case 68: /* lit: NUMBER  */
-#line 175 "src/parser.y"
+#line 176 "src/parser.y"
             { (yyval.ival) = (yyvsp[0].ival); if ((yyvsp[0].ival) > 0xffff) {
 	 printf("number %d too large\n", (yyvsp[0].ival));
 	 exit(1); }}
-#line 1621 "src/bison.cpp"
+#line 1622 "src/bison.cpp"
     break;
 
   case 69: /* lit: PLUS NUMBER  */
-#line 178 "src/parser.y"
+#line 179 "src/parser.y"
                        { (yyval.ival) = (yyvsp[0].ival); }
-#line 1627 "src/bison.cpp"
+#line 1628 "src/bison.cpp"
     break;
 
   case 70: /* lit: MINUS NUMBER  */
-#line 179 "src/parser.y"
+#line 180 "src/parser.y"
                         { (yyval.ival) = (1 << 16) - (yyvsp[0].ival); }
-#line 1633 "src/bison.cpp"
+#line 1634 "src/bison.cpp"
     break;
 
   case 71: /* sym_lit: SYMBOL  */
-#line 182 "src/parser.y"
+#line 183 "src/parser.y"
                { (yyval.sval) = (yyvsp[0].sval); }
-#line 1639 "src/bison.cpp"
+#line 1640 "src/bison.cpp"
     break;
 
   case 72: /* sym_lit: lit  */
-#line 183 "src/parser.y"
+#line 184 "src/parser.y"
                { (yyval.sval) = (char *) calloc(7, sizeof(char));
 		 snprintf((yyval.sval), 6, "%d", (yyvsp[0].ival));
 		 (yyval.sval)[6] = '\0'; }
-#line 1647 "src/bison.cpp"
+#line 1648 "src/bison.cpp"
     break;
 
   case 73: /* sym_lit_list: sym_lit  */
-#line 188 "src/parser.y"
+#line 189 "src/parser.y"
                 { (yyval.str_list) = new vector<string>();
 		  (yyval.str_list)->push_back((yyvsp[0].sval)); }
-#line 1654 "src/bison.cpp"
+#line 1655 "src/bison.cpp"
     break;
 
   case 74: /* sym_lit_list: sym_lit_list COMMA sym_lit  */
-#line 190 "src/parser.y"
+#line 191 "src/parser.y"
                                      {(yyval.str_list)->push_back((yyvsp[0].sval)); }
-#line 1660 "src/bison.cpp"
+#line 1661 "src/bison.cpp"
     break;
 
 
-#line 1664 "src/bison.cpp"
+#line 1665 "src/bison.cpp"
 
       default: break;
     }
@@ -1854,8 +1855,12 @@ yyreturn:
   return yyresult;
 }
 
-#line 192 "src/parser.y"
+#line 193 "src/parser.y"
 
+
+unsigned short reverse_bytes(unsigned short i) {
+  return ((i & 0xff) << 8) + ((i & 0xff00) >> 8);
+}
 void yyerror(const char *s) {
   cout << "Parse error:" << s << endl;
   exit(-1);

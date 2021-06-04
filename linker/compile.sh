@@ -1,3 +1,3 @@
 #!/bin/sh
 
-gcc -o linker src/*.cpp -Iinc
+gcc -o linker src/*.c -Iinc
