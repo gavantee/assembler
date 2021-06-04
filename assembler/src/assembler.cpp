@@ -13,13 +13,14 @@ int main(int argc, char* argv[]) {
     printf("usage: %s [-o <output_file>] <input_file>", argv[0]);
 		return 0;
 	}
+	bool log = false;
   char *outfn = NULL;
   char *infn;
-  if (strcmp(argv[1], "-o") == 0) {
-    outfn = argv[2];
-		infn = argv[3];
+	for (int i = 1; i < argc; ++i) {
+    if (strcmp(argv[i], "-o") == 0) { outfn = argv[++i]; }
+		else if (strcmp(argv[i], "-v") == 0) { log = true; }
+		else { infn = argv[i]; }
 	}
-	else infn = argv[1];
   FILE *myfile = fopen(infn, "r");
   if (!myfile) {
     printf("error: cat open %s", infn);
@@ -33,7 +34,7 @@ int main(int argc, char* argv[]) {
 	code.reduce();
 	code.filterSymbols();
 	code.addStandardSections();
-	code.dump();
+	if (log) code.dump();
 	if (outfn != NULL)
 	  code.write(outfn);
 	else code.write("out.o");

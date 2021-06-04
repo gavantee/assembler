@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     relocate(code, place, place_num);
 		if (outfile) write_hex(code, outfile);
 		else write_hex(code, "out.hex");
-		if (log) print_code(code);
+		 if (log) print_code(code);
 	}
 }
 
