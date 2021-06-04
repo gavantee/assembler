@@ -573,7 +573,7 @@ static const yytype_uint8 yyrline[] =
        0,    53,    53,    54,    57,    58,    59,    62,    65,    66,
       69,    72,    75,    78,    87,    88,    89,    92,    94,    97,
      100,   103,   107,   111,   117,   118,   119,   122,   123,   124,
-     125,   126,   128,   131,   132,   133,   134,   135,   136,   137,
+     125,   126,   128,   129,   132,   133,   134,   135,   136,   137,
      138,   139,   140,   141,   142,   143,   146,   147,   150,   151,
      152,   153,   154,   155,   156,   157,   158,   161,   162,   163,
      164,   165,   166,   167,   168,   169,   172,   174,   176,   179,
@@ -658,7 +658,7 @@ static const yytype_int16 yypact[] =
 static const yytype_int8 yydefact[] =
 {
        0,    24,    25,    26,    27,    28,    29,    30,    31,     0,
-       0,    32,    33,    34,    35,    36,    37,    38,    39,    40,
+       0,    32,    34,    35,    36,    37,    38,    39,    33,    40,
       41,    42,    43,    44,    45,    46,    47,     0,     0,     0,
        0,     0,     0,    16,     0,     0,     2,     4,     5,     9,
        8,    17,     0,     0,     0,     0,    22,    23,    66,    10,
@@ -750,7 +750,7 @@ static const yytype_int8 yyr1[] =
        0,    49,    50,    50,    51,    51,    51,    52,    53,    53,
       54,    54,    54,    54,    54,    54,    54,    55,    55,    55,
       55,    55,    55,    55,    56,    56,    56,    57,    57,    57,
-      57,    57,    58,    59,    59,    59,    59,    59,    59,    59,
+      57,    57,    58,    58,    59,    59,    59,    59,    59,    59,
       59,    59,    59,    59,    59,    59,    60,    60,    61,    61,
       61,    61,    61,    61,    61,    61,    61,    62,    62,    62,
       62,    62,    62,    62,    62,    62,    63,    63,    64,    64,
@@ -1402,45 +1402,45 @@ yyreduce:
 #line 1403 "src/bison.cpp"
     break;
 
-  case 33: /* instr_2: XCHG  */
-#line 131 "src/parser.y"
-                { (yyval.ival) = 0x60; }
+  case 33: /* instr_1: NOT  */
+#line 129 "src/parser.y"
+                { (yyval.ival) = 0x80; }
 #line 1409 "src/bison.cpp"
     break;
 
-  case 34: /* instr_2: ADD  */
+  case 34: /* instr_2: XCHG  */
 #line 132 "src/parser.y"
-                { (yyval.ival) = 0x70; }
+                { (yyval.ival) = 0x60; }
 #line 1415 "src/bison.cpp"
     break;
 
-  case 35: /* instr_2: SUB  */
+  case 35: /* instr_2: ADD  */
 #line 133 "src/parser.y"
-                { (yyval.ival) = 0x71; }
+                { (yyval.ival) = 0x70; }
 #line 1421 "src/bison.cpp"
     break;
 
-  case 36: /* instr_2: MUL  */
+  case 36: /* instr_2: SUB  */
 #line 134 "src/parser.y"
-                { (yyval.ival) = 0x72; }
+                { (yyval.ival) = 0x71; }
 #line 1427 "src/bison.cpp"
     break;
 
-  case 37: /* instr_2: DIV  */
+  case 37: /* instr_2: MUL  */
 #line 135 "src/parser.y"
-                { (yyval.ival) = 0x73; }
+                { (yyval.ival) = 0x72; }
 #line 1433 "src/bison.cpp"
     break;
 
-  case 38: /* instr_2: CMP  */
+  case 38: /* instr_2: DIV  */
 #line 136 "src/parser.y"
-                { (yyval.ival) = 0x74; }
+                { (yyval.ival) = 0x73; }
 #line 1439 "src/bison.cpp"
     break;
 
-  case 39: /* instr_2: NOT  */
+  case 39: /* instr_2: CMP  */
 #line 137 "src/parser.y"
-                { (yyval.ival) = 0x80; }
+                { (yyval.ival) = 0x74; }
 #line 1445 "src/bison.cpp"
     break;
 

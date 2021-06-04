@@ -125,7 +125,8 @@ instr_jmp:
 	| JNE 	{ $$ = 0x52; }
 	| JGT 	{ $$ = 0x53; };
 
-instr_1: INT 	{ $$ = 0x10; };
+instr_1: INT 	{ $$ = 0x10; }
+       | NOT	{ $$ = 0x80; };
 
 instr_2:
        XCHG  	{ $$ = 0x60; }
@@ -134,7 +135,6 @@ instr_2:
        | MUL	{ $$ = 0x72; }
        | DIV	{ $$ = 0x73; }
        | CMP	{ $$ = 0x74; }
-       | NOT	{ $$ = 0x80; }
        | AND	{ $$ = 0x81; }
        | OR	  { $$ = 0x82; }
        | XOR	{ $$ = 0x83; }
