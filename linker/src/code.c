@@ -103,6 +103,10 @@ void add_symtab(code_s *code, section_s *newsym, char *names) {
 
 void write_elf(code_s *code, const char *fn) {
   FILE *outfile = fopen(fn, "wb");
+	if (outfile == NULL) {
+    printf("Cant open: %s\n", fn);
+		exit(-1);
+	}
   const char magic[] = "\x7f\x45\x4c\x46\x01\x01\x01\x03" \
 								       "\x00\x00\x00\x00\x00\x00\x00\x00" \
 								       "\x01\x00\x28\x00\x01\x00\x00\x00" \
@@ -314,6 +318,18 @@ void solve_relocs(code_s *code) {
 	}
 }
 
+void check_symbols(code_s *code) {
+  section_s *symtab = code->secs[code->symndx];
+	symbol_s *sym = (symbol_s *) symtab->data;
+	for (int i = 0; i < symtab->info; ++i) {
+    // print_symbol(code, sym + i, i);
+    if(sym[i].shndx == 0 && strcmp((char *) get_name(code, sym[i].name), "ABS") != 0) {
+      printf("Undefined symbol: %s", get_name(code, sym[i].name));
+			exit(-1);
+		}
+	}
+}
+
 void relocate(code_s *code, place_s *place, int place_num) {
   qsort(place, place_num, sizeof(place_s), placecmp);
 	int last_addr = 0;
@@ -342,12 +358,18 @@ void relocate(code_s *code, place_s *place, int place_num) {
 			code->placed[i] = true;
 		}
   }
+	check_symbols(code);
 	solve_symbols(code);
   solve_relocs(code);
 	// print_code(code);
 }
 
-void write_hex(code_s *code, char *outfile) {
+void write_hex(code_s *code, char *fn) {
+  FILE *outfile = fopen(fn, "wb");
+	if (outfile == NULL) {
+    printf("Cant open: %s\n", fn);
+		exit(-1);
+	}
 	int n = 0;
   for (int i = 0; i < code->secnum; ++i)
     if (code->secs[i]->type == 0x01) ++n;
@@ -365,10 +387,10 @@ void write_hex(code_s *code, char *outfile) {
     int size = places[i].off & 0xffff;
 		int off = places[i].off >> 16;
     for (int j = 0; j < size; ++j) {
-      if (j % 8 == 0) printf("\n%04X: ", off + j);
-			printf("%02X ", places[i].section[j]);
+      if (j % 8 == 0) fprintf(outfile, "\n%04X: ", off + j);
+			fprintf(outfile, "%02X ", places[i].section[j]);
 		}
-		printf("\n");
+		// printf("\n");
 	}
 }
 

@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[]) {
   FILE *in;
-	char *outfile = "out.o";
+	char *outfile = NULL;
 	place_s place[argc];
 	int place_num;
 	bool linkable = false;
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
       }
       else if (strncmp(argv[i], "-place", 6) == 0) {
 				place[j].section = (char *) ecalloc(100, sizeof(char));
-        sscanf(argv[i], "-place=%[^@]@%d", place[j].section, &(place[j].off));
+        sscanf(argv[i], "-place=%[^@]@%x", place[j].section, &(place[j].off));
 				place_num = ++j;
 			}
 			else if (strcmp(argv[i], "-linkable") == 0) {
@@ -47,20 +47,23 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (log)
-	  print_code(code);
 
 	if (linkable && hex) {
     printf("Cant use both -hex and -linkable\n");
 		exit(-1);
 	}
 
-	if (linkable)
-    write_elf(code, outfile);
+	if (linkable) {
+    if (outfile) write_elf(code, outfile);
+		else write_elf(code, "out.o");
+		if (log) print_code(code);
+	}
 
 	if (hex) {
     relocate(code, place, place_num);
-    write_hex(code, outfile);
+		if (outfile) write_hex(code, outfile);
+		else write_hex(code, "out.hex");
+		if (log) print_code(code);
 	}
 }
 

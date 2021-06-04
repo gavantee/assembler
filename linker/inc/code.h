@@ -29,7 +29,7 @@ void write_elf(code_s *code, const char *fn);
 void concat_section(code_s *code, int oldid, int newid, int off);
 void add_file(code_s *code, FILE *in);
 void relocate(code_s *code, place_s *place, int place_num);
-void write_hex(code_s *code, char *outfile);
+void write_hex(code_s *code, char *fn);
 void print_code(code_s *code);
 int add_str(code_s *code, char *name);
 
