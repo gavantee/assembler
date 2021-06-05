@@ -12,10 +12,15 @@
 
 #define LOG 0
 
+const unsigned short masks[] = {0x0, 0x0, 0x4000, 0x2000};
+
+typedef unsigned short ushort;
 typedef unsigned char uchar;
 
 uchar mem[65536] = {0};
-unsigned short reg[16] = {0};
+ushort reg[16] = {0};
+
+unsigned short int_reqs = 0;
 
 int get_word(int addr) {
   return mem[addr] + (mem[addr + 1] << 8);
@@ -58,11 +63,28 @@ void pop(uchar reg_num) {
 	reg[6] += 2;
 }
 
+
 void int_call(int ivt_ent) {
-  // printf("INT %d\n", ivt_ent);
 	push(7);
 	push(8);
 	reg[7] = mem[ivt_ent * 2];
+  reg[8] |= 1 << 15;
+}
+
+void int_req(int ivt_ent) {
+  // printf("requesting: %d\n", ivt_ent);
+	int_reqs |= 1 << ivt_ent;
+  // int_call(ivt_ent);
+}
+
+void interrupts() {
+  if ((reg[8] >> 15) != 0) return;
+  for (int i = 2; i < 4; ++i) {
+    if ((int_reqs & (1 << i)) != 0 && (reg[8] & masks[i]) == 0) {
+      int_reqs &= ~(1 << i);
+      int_call(i);
+		}
+	}
 }
 
 void psw_set(unsigned short val) {
@@ -227,9 +249,6 @@ void exec_inst(uchar opcode, uchar regs, uchar addr_mode, int operand) {
 	}
 }
 
-void interrupts() {
-}
-
 void read_inst() {
   if (LOG) printf("%04X: ", reg[7]);
   uchar opcode = mem[reg[7]++];
@@ -270,6 +289,7 @@ int main(int argc, char *argv[]) {
 	terminal_init();
 	int i = 0;
 	while (true) {
+    // printf("%02X\n", int_reqs);
 		terminal_read(&mem[0xff02]);
     timer(mem[0xff10]);
     read_inst();

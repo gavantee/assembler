@@ -43,7 +43,7 @@ void timer(int tim_cfg) {
   if (new_mills - mills >= t) {
     // printf("Delay: %d", t);
 		mills = new_mills;
-    int_call(2);
+    int_req(2);
 	}
 }
 

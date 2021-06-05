@@ -107,7 +107,7 @@ void terminal_read(unsigned char *term_in) {
   char c;
   if (read(STDIN_FILENO, &c, 1) == 1) {
 	  *term_in = c;
-		int_call(3);
+    int_req(3);
   }
 }
 

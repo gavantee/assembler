@@ -6,4 +6,5 @@ clean:
 emulator: src/*.c inc/*.h
 	gcc -o emulator src/*.c -Iinc
 
-#test: emulator
+test: emulator
+	./emulator tests/out.hex
