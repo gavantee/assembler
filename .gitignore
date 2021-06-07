@@ -1,6 +1,10 @@
 assembler/*.out
 assembler/*.o
 assembler/assembler
-assembler/bison.cpp
-assembler/bison.hpp
-assembler/flex.cpp
+assembler/src/bison.cpp
+assembler/inc/bison.hpp
+assembler/src/flex.cpp
+linker/linker
+linker/*.hex
+linker/*.o
+emulator/emulator
