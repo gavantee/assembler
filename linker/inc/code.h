@@ -15,6 +15,7 @@ typedef struct code_s {
 	int old_strsize;
 	int cur_secnum;
 	bool *placed;
+	int *symmap;
 } code_s;
 
 unsigned char *get_name(code_s *code, int off);

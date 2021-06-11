@@ -26,8 +26,13 @@ void Code::addSymbol(const string &label, const string &section, int val, bool g
 	}
 	Symbol sym = symbols[label];
 	for (const Location &loc : *(sym.locations)) {
-    code[loc.section].at(loc.off) += val;
+    unsigned int tmp = code[loc.section][loc.off] + (code[loc.section][loc.off + 1] << 8);
+    tmp += val;
+		code[loc.section][loc.off] = val & 0xff;
+		code[loc.section][loc.off + 1] = val >> 8;
 	}
+	if (global)
+    sym.global = true;
 	sym.value = val;
 	sym.section = section;
 	symbols[label] = sym;
@@ -81,10 +86,17 @@ void Code::reduce() {
     for (auto r = s.second.begin(); r != s.second.end(); ) {
       if ((symbols[r->label].section == "ABS" && r->rel == false) ||
 				(symbols[r->label].section == s.first && r->rel == true)) {
+				if (symbols[r->label].section == s.first && r->rel == true) {
+				  unsigned int val = code[r->section][r->off] + ((unsigned char) code[r->section][r->off + 1] << 8);
+					// printf("%0X%0X\n", code[r->section][r->off + 1], code[r->section][r->off]);
+					val -= r->off + 2;
+					code[r->section][r->off] = val & 0xff;
+					code[r->section][r->off + 1] = val >> 8;
+				}
 				s.second.erase(r);
 				continue;
 			}
-			if (!symbols[r->label].global)
+			if (!(symbols[r->label].section == "ABS" || symbols[r->label].section == "EXT"))
 				r->label = symbols[r->label].section;
 			++r;
 		}

@@ -81,7 +81,7 @@ directive:
 		  if (s[0] >= '0' && s[0] <= '9') tmp = stoi(s, nullptr, 0);
 		  else tmp = code.resolveSymbol(s, section, pc);
 		  pc += 2;
-		  code.addInt(tmp, 2);
+		  code.addInt(tmp, 2, false);
 		}
 	}
 	| SKIP lit { pc += $2; code.addInt(0, $2); }

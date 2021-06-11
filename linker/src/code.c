@@ -30,7 +30,7 @@ void print_relocs(code_s *code, int id) {
   section_s *reloctab = code->secs[id];
 	reloc_s *relocs = (reloc_s *) reloctab->data;
 	int n = reloctab->size / reloctab->entsize;
-	printf("relocation section for: %d (%s)\n", reloctab->info, get_name(code, code->secs[reloctab->info]->name));
+	// printf("relocation section for: %d (%s)\n", reloctab->info, get_name(code, code->secs[reloctab->info]->name));
 	for (int i = 0; i < n; ++i)
     print_reloc(code, relocs + i);
 }
@@ -42,6 +42,19 @@ void add_strtab(code_s *code, section_s *newstr) {
     str->data[i + str->size] = newstr->data[i];
 	str->size += newstr->size;
 }
+
+void fix_all_relocs(code_s *code) {
+  for (int i = code->secnum; i < code->cur_secnum; ++i) {
+    section_s *s = code->secs[i];
+		if (s->type != 0x09) continue;
+		reloc_s *relocs = (reloc_s *) s->data;
+		for (int i = 0; i < s->size / s->entsize; ++i) {
+      reloc_s *r = relocs + i;
+      r->info = (code->symmap[r->info >> 8] << 8) + (r->info & 0xff);
+		}
+	}
+}
+
 
 void fix_relocs(code_s *code, int oldid, int newid) {
   for (int i = code->secnum; i < code->cur_secnum; ++i) {
@@ -63,11 +76,13 @@ void add_symbol(code_s *code, symbol_s *sym, int id, char *name) {
   section_s *symtab = code->secs[code->symndx];
 	int n = symtab->size / symtab->entsize;
 	symbol_s *syms = (symbol_s *) symtab->data;
+	// print_symbol(code, sym, 0);
 	for (int i = 0; i < n && (sym->info & 0xf) != 0x03 /* section */; ++i) {
     symbol_s *cur = syms + i;
 		if (strcmp((char *) get_name(code, cur->name), (char *) get_name(code, sym->name)) == 0) {
       if (sym->shndx == 0) {
-				fix_relocs(code, id, i);
+				code->symmap[id] = i;
+				//fix_relocs(code, id, i);
 				return;
 			}
 			if (sym->shndx != 0 && cur->shndx == 0) {
@@ -75,7 +90,8 @@ void add_symbol(code_s *code, symbol_s *sym, int id, char *name) {
 				cur->value = sym->value;
 				cur->size = sym->size;
 				cur->info = sym->info;
-				fix_relocs(code, id, i);
+				code->symmap[id] = i;
+				//fix_relocs(code, id, i);
 				return;
 			}
 			if (sym->shndx != 0 && cur->shndx != 0) {
@@ -84,17 +100,21 @@ void add_symbol(code_s *code, symbol_s *sym, int id, char *name) {
 			}
 		}
 	}
+  code->symmap[id] = symtab->info;
 	symtab->data = (unsigned char *) erealloc(symtab->data, symtab->size + symtab->entsize, sizeof(unsigned char *));
 	unsigned char *symdata = (unsigned char*) sym;
 	for (int i = 0; i < symtab->entsize; ++i)
     symtab->data[symtab->size + i] = symdata[i];
 	symtab->size += symtab->entsize;
 	symtab->info += 1;
-  fix_relocs(code, id, n);
+  // fix_relocs(code, id, n);
 }
 
 void add_symtab(code_s *code, section_s *newsym, char *names) {
+  if (code->symmap)
+    free(code->symmap);
   section_s *symtab = code->secs[code->symndx];
+  code->symmap = ecalloc(symtab->info, sizeof(int));
 	for (int i = 0; i < newsym->size / newsym->entsize; ++i) {
     symbol_s *sym = (symbol_s *) (newsym->data + i * newsym->entsize);
 		add_symbol(code, sym, i, names + sym->name);
@@ -267,6 +287,7 @@ void add_file(code_s *code, FILE *in) {
 			}
       //tmp->name += code->old_strsize;
 		}
+	  if (!code->first) fix_all_relocs(code);
 		code->secnum = code->cur_secnum;
 		code->old_strsize = code->secs[code->strndx]->size;
 		code->first = false;
