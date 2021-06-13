@@ -8,3 +8,4 @@ linker/linker
 linker/*.hex
 linker/*.o
 emulator/emulator
+obj
