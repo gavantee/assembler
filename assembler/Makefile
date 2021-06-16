@@ -2,11 +2,11 @@ all: assembler
 
 clean:
 	rm -rf src/bison.cpp inc/bison.hpp src/flex.cpp assembler *.o
-bison: src/parser.y
+src/bison.cpp inc/bison.hpp: src/parser.y
 	bison -o src/bison.cpp --defines=inc/bison.hpp src/parser.y
-flex src/flex.cpp: src/lexer.l bison
+src/flex.cpp: src/lexer.l src/bison.cpp
 	flex -o src/flex.cpp src/lexer.l
-assembler: src/*.cpp inc/*.h flex
+assembler: src/*.cpp inc/*.h src/flex.cpp
 	g++ -std=c++17 -o assembler src/flex.cpp src/bison.cpp src/code.cpp src/assembler.cpp -Iinc
 
 test: assembler

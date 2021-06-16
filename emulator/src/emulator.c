@@ -87,20 +87,43 @@ void interrupts() {
 	}
 }
 
-void psw_set(unsigned short val) {
-  int z = val == 0;
-	int n = val < 0;
-	reg[8] &= 0xfff0;
-	reg[8] += z << 0;
-	reg[8] += n << 4;
+void psw_set(unsigned int val, ushort flags /*ncoz*/) {
+  int zb = val == 0;
+	int nb = (val & 0x0000ff00) != 0;
+	int cb = (val & 0x00010000) != 0;
+	if (((flags >> 3) & 1) == 1) {
+    reg[8] &= 0xfff7;
+		reg[8] += nb << 3;
+	}
+	if (((flags >> 2) & 1) == 1) {
+    reg[8] &= 0xfffb;
+		reg[8] += cb << 1;
+	}
+	if (((flags >> 0) & 1) == 1) {
+    reg[8] &= 0xfffe;
+		reg[8] += zb << 0;
+	}
 }
 
-int psw_n() {
-  return (reg[8] >> 4) & 1;
+bool psw_n() {
+  return (reg[8] >> 3) & 1;
 }
 
 bool psw_z() {
   return reg[8] & 1;
+}
+
+bool psw_o() {
+  return (reg[8] >> 1) & 1;
+}
+
+bool psw_c() {
+  return (reg[8] >> 2) & 1;
+}
+
+void psw_seto(int o) {
+  reg[8] &= 0xfffd;
+  reg[8] += o << 1;
 }
 
 void exec_inst(uchar opcode, uchar regs, uchar addr_mode, int operand) {
@@ -207,7 +230,9 @@ void exec_inst(uchar opcode, uchar regs, uchar addr_mode, int operand) {
 		reg[reg_d] /= reg[reg_s];
 		break;
   case 0x74:
-		psw_set(reg[reg_d] - reg[reg_s]);
+		psw_set(reg[reg_d] - reg[reg_s], 0xf);
+		if (((reg[reg_d] & 0x8000) == (reg[reg_d] & 0x8000)))
+      psw_seto(((reg[reg_d] - reg[reg_s]) & 0x8000) != (reg[reg_d] & 0x8000));
 		break;
 	case 0x80:
     reg[reg_d] = ~reg[reg_d];
@@ -222,13 +247,15 @@ void exec_inst(uchar opcode, uchar regs, uchar addr_mode, int operand) {
 		reg[reg_d] ^= reg[reg_s];
 		break;
   case 0x84:
-		psw_set(reg[reg_d] & reg[reg_s]);
+		psw_set(reg[reg_d] & reg[reg_s], 0x9);
 		break;
   case 0x90:
 		reg[reg_d] <<= reg[reg_s];
+		psw_set(reg[reg_d], 0xd);
 		break;
   case 0x91:
 		reg[reg_d] >>= reg[reg_s];
+		psw_set(reg[reg_d], 0xd);
 		break;
   case 0xA0:
 		reg[reg_d] = operand;
