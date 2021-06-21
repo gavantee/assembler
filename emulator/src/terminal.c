@@ -32,7 +32,7 @@ static void terminal_done(void)
 }
 
 int terminal_init() {
-				struct sigaction act;
+        struct sigaction act;
 
     /* Already initialized? */
     if (terminal_descriptor != -1)
@@ -106,7 +106,7 @@ int terminal_init() {
 void terminal_read(unsigned char *term_in) {
   char c;
   if (read(STDIN_FILENO, &c, 1) == 1) {
-	  *term_in = c;
+    *term_in = c;
     int_req(3);
   }
 }

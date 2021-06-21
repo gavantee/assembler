@@ -5,7 +5,7 @@
 
 typedef struct place_s {
   unsigned char *section;
-	int off;
+  int off;
 } place_s;
 
 void *ecalloc(size_t nmemb, size_t size);

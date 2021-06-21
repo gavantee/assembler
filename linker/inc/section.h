@@ -8,27 +8,27 @@ typedef struct code_s code_s;
 typedef struct section_s {
   int name;
   int type;
-	int addr;
-	int off;
-	int size;
-	int link;
-	int info;
-	int entsize;
-	unsigned char *data;
+  int addr;
+  int off;
+  int size;
+  int link;
+  int info;
+  int entsize;
+  unsigned char *data;
 } section_s;
 
 typedef struct symbol_s {
   int name;
-	int value;
-	int size;
-	unsigned char info;
-	unsigned char other;
-	unsigned short shndx;
+  int value;
+  int size;
+  unsigned char info;
+  unsigned char other;
+  unsigned short shndx;
 } symbol_s;
 
 typedef struct reloc_s {
   int off;
-	int info;
+  int info;
 } reloc_s;
 
 section_s *read_section(FILE* in);

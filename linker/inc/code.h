@@ -11,11 +11,11 @@ typedef struct code_s {
   int secnum;
   int symndx;
   int strndx;
-	bool first;
-	int old_strsize;
-	int cur_secnum;
-	bool *placed;
-	int *symmap;
+  bool first;
+  int old_strsize;
+  int cur_secnum;
+  bool *placed;
+  int *symmap;
 } code_s;
 
 unsigned char *get_name(code_s *code, int off);
