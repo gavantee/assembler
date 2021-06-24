@@ -177,6 +177,7 @@ void exec_inst(uchar opcode, uchar regs, uchar addr_mode, int operand) {
 
   if (LOG) printf("izracunati operand: %02X\nStore operand: %02X\n", operand, str_op);
 
+  unsigned short tmp;
   switch(up) {
   case 3:
     reg[reg_s] -= 2;
@@ -219,7 +220,7 @@ void exec_inst(uchar opcode, uchar regs, uchar addr_mode, int operand) {
     if (!psw_n() && !psw_z()) reg[7] = operand;
     break;
   case 0x60:
-    unsigned short tmp = reg[reg_s];
+    tmp = reg[reg_s];
     reg[reg_s] = reg[reg_d];
     reg[reg_d] = tmp;
     break;
